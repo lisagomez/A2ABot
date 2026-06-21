@@ -64,3 +64,6 @@ Thumbs.db
 supabase/.branches
 supabase/.temp
 .claude/skills/video-visuals/assets/levy.png
+
+# TypeScript build info
+*.tsbuildinfo

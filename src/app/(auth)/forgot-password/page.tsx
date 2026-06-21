@@ -1,24 +1,23 @@
 import Link from 'next/link'
-import { SignupForm } from '@/features/auth/components'
+import { ForgotPasswordForm } from '@/features/auth/components'
 
-export default function SignupPage() {
+export default function ForgotPasswordPage() {
   return (
     <div className="space-y-8">
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-          Crea tu cuenta
+          Recupera tu acceso
         </h1>
         <p className="mt-2 text-sm text-gray-500">
-          Empieza a construir y vender bots en minutos
+          Te enviaremos un enlace para restablecer tu contraseña
         </p>
       </div>
 
-      <SignupForm />
+      <ForgotPasswordForm />
 
       <p className="text-center text-sm text-gray-500">
-        ¿Ya tienes cuenta?{' '}
         <Link href="/login" className="font-medium text-gray-900 hover:underline">
-          Iniciar sesión
+          Volver a iniciar sesión
         </Link>
       </p>
     </div>

@@ -1,11 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import type { ClienteFinal, Project } from '../types'
-import { FLOW_STEPS, getTopic } from '../data/topics'
-import { getTemplate } from '../data/templates'
+import type { ClienteFinal, FlowStepKey, Project } from '../types'
+import { getTopic } from '../data/topics'
+import { buildPreview, getTemplate } from '../data/templates'
 import { COMPLEXITY_META } from '../lib/complexity'
 import { ClienteFinalEditor } from './ClienteFinalEditor'
+import { ConversationPreview } from './ConversationPreview'
+import { FlowBuilder } from './FlowBuilder'
 
 interface StoreSlice {
   clientesByProject: (projectId: string) => ClienteFinal[]
@@ -15,6 +17,7 @@ interface StoreSlice {
     patch: Partial<Pick<ClienteFinal, 'nombre' | 'variables' | 'catalogos'>>
   ) => void
   deleteClienteFinal: (id: string) => void
+  updateProject: (projectId: string, patch: Partial<Pick<Project, 'nombre' | 'flujo'>>) => void
 }
 
 export function ProjectDetail({
@@ -81,18 +84,28 @@ export function ProjectDetail({
         </div>
         <p className="mt-1 text-xs text-gray-500">{template.descripcion}</p>
 
-        {/* Flujo */}
-        <div className="mt-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Flujo</p>
-          <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {project.flujo.map((f, i) => (
-              <span key={f} className="flex items-center gap-1.5">
-                {i > 0 && <span className="text-gray-300">→</span>}
-                <span className="rounded-lg bg-gray-100 px-2 py-1 text-xs text-gray-700">
-                  {FLOW_STEPS[f].label}
-                </span>
-              </span>
-            ))}
+        {/* Flujo editable (drag & drop) + preview en vivo */}
+        <div className="mt-4 grid grid-cols-1 gap-5 md:grid-cols-2">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              Flujo de comunicación
+            </p>
+            <div className="mt-2">
+              <FlowBuilder
+                value={project.flujo}
+                onChange={(flujo: FlowStepKey[]) => store.updateProject(project.id, { flujo })}
+              />
+            </div>
+          </div>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              Vista previa del flujo
+            </p>
+            <div className="mt-2">
+              <ConversationPreview
+                turns={buildPreview(template.key, clientes[0] ?? null, project.flujo)}
+              />
+            </div>
           </div>
         </div>
 
@@ -213,6 +226,7 @@ export function ProjectDetail({
         <ClienteFinalEditor
           template={template}
           cliente={editing}
+          flujo={project.flujo}
           onClose={() => setEditingId(null)}
           onSave={(patch) => {
             store.updateClienteFinal(editing.id, patch)

@@ -1,18 +1,19 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import type { CatalogRow, ClienteFinal, ProjectTemplate } from '../types'
+import type { CatalogRow, ClienteFinal, FlowStepKey, ProjectTemplate } from '../types'
 import { buildPreview } from '../data/templates'
 import { ConversationPreview } from './ConversationPreview'
 
 interface Props {
   template: ProjectTemplate
   cliente: ClienteFinal
+  flujo: FlowStepKey[]
   onClose: () => void
   onSave: (patch: Pick<ClienteFinal, 'nombre' | 'variables' | 'catalogos'>) => void
 }
 
-export function ClienteFinalEditor({ template, cliente, onClose, onSave }: Props) {
+export function ClienteFinalEditor({ template, cliente, flujo, onClose, onSave }: Props) {
   const [nombre, setNombre] = useState(cliente.nombre)
   const [variables, setVariables] = useState<Record<string, string>>(cliente.variables ?? {})
   const [catalogos, setCatalogos] = useState<Record<string, CatalogRow[]>>(
@@ -20,8 +21,8 @@ export function ClienteFinalEditor({ template, cliente, onClose, onSave }: Props
   )
 
   const previewTurns = useMemo(
-    () => buildPreview(template.key, { ...cliente, nombre, variables, catalogos }),
-    [template.key, cliente, nombre, variables, catalogos]
+    () => buildPreview(template.key, { ...cliente, nombre, variables, catalogos }, flujo),
+    [template.key, cliente, nombre, variables, catalogos, flujo]
   )
 
   function setVar(key: string, value: string) {

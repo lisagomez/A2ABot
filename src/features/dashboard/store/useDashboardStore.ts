@@ -29,7 +29,12 @@ function load(userId: string): DashboardData {
     const parsed = JSON.parse(raw) as Partial<DashboardData>
     return {
       workspaces: parsed.workspaces ?? [],
-      projects: parsed.projects ?? [],
+      // Backfill: proyectos creados antes de la feature de plantillas no tienen
+      // templateKey; se deriva del tema para que carguen la plantilla correcta.
+      projects: (parsed.projects ?? []).map((p) => ({
+        ...p,
+        templateKey: p.templateKey || templateKeyForTopic(p.temaKey),
+      })),
       clientesFinales: parsed.clientesFinales ?? [],
     }
   } catch {
@@ -123,6 +128,16 @@ export function useDashboardStore(userId: string) {
     [data, persist]
   )
 
+  const updateProject = useCallback(
+    (projectId: string, patch: Partial<Pick<Project, 'nombre' | 'flujo'>>) => {
+      persist({
+        ...data,
+        projects: data.projects.map((p) => (p.id === projectId ? { ...p, ...patch } : p)),
+      })
+    },
+    [data, persist]
+  )
+
   const deleteProject = useCallback(
     (projectId: string) => {
       persist({
@@ -191,6 +206,7 @@ export function useDashboardStore(userId: string) {
     createWorkspace,
     deleteWorkspace,
     createProject,
+    updateProject,
     deleteProject,
     projectsByWorkspace,
     clientesByProject,

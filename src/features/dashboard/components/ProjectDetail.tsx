@@ -138,6 +138,12 @@ export function ProjectDetail({
                 <span className="text-[11px] text-gray-400">—</span>
               )}
             </div>
+            {template.catalogos.length > 0 && (
+              <p className="mt-1.5 text-[11px] text-gray-400">
+                Estos catálogos se rellenan en cada Cliente Final → botón{' '}
+                <span className="font-medium text-gray-600">Personalizar</span>.
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -209,11 +215,17 @@ export function ProjectDetail({
                       ✕
                     </button>
                   </div>
+                  {template.catalogos.length > 0 && filas === 0 && (
+                    <p className="mt-2 rounded-md bg-amber-50 px-2 py-1 text-[11px] text-amber-700">
+                      Pendiente: añade {template.catalogos.map((c) => c.label).join(' y ')} en
+                      Personalizar.
+                    </p>
+                  )}
                   <button
                     onClick={() => setEditingId(c.id)}
-                    className="mt-3 w-full rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="mt-3 w-full rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
                   >
-                    Personalizar
+                    Personalizar datos
                   </button>
                 </div>
               )

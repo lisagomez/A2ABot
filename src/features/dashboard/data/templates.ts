@@ -1,6 +1,7 @@
 import type {
   CatalogRow,
   ClienteFinal,
+  FlowStepKey,
   PreviewTurn,
   ProjectTemplate,
 } from '../types'
@@ -134,15 +135,24 @@ function rows(cf: ClienteFinal | null, catalogKey: string): CatalogRow[] {
   return cf?.catalogos?.[catalogKey]?.filter((r) => Object.values(r).some((x) => x?.trim())) ?? []
 }
 
-// Construye una conversación de ejemplo a partir de la plantilla + config.
-export function buildPreview(
-  templateKey: string,
+// Contexto que se pasa a cada constructor de paso.
+interface PreviewCtx {
+  template: ProjectTemplate
   cf: ClienteFinal | null
-): PreviewTurn[] {
-  const template = getTemplate(templateKey)
-  const negocio = v(template, cf, 'nombre_negocio')
+  negocio: string
+}
 
-  if (templateKey === 'agendar-cita') {
+type StepBuilder = (ctx: PreviewCtx) => PreviewTurn[]
+
+// Constructores por paso para cada plantilla. Cada paso del flujo aporta sus
+// turnos; al reordenar/quitar pasos, la conversación cambia.
+
+const agendarCita: Partial<Record<FlowStepKey, StepBuilder>> = {
+  saludo: ({ negocio }) => [
+    { from: 'bot', text: `¡Hola! Bienvenido a ${negocio} 👋\nSoy tu asistente para agendar citas. ¿Cómo te llamas?` },
+    { from: 'user', text: 'María López' },
+  ],
+  clarificacion: ({ cf }) => {
     const servicios = rows(cf, 'servicios')
     const horarios = rows(cf, 'horarios')
     const sLista =
@@ -157,44 +167,107 @@ export function buildPreview(
         : '(agrega horarios en el catálogo)'
     const primer = servicios[0]?.nombre || 'tu servicio'
     return [
-      { from: 'bot', text: `¡Hola! Bienvenido a ${negocio} 👋\nSoy tu asistente para agendar citas. ¿Cómo te llamas?` },
-      { from: 'user', text: 'María López' },
       { from: 'bot', text: `Un gusto, María. Estos son nuestros servicios:\n    ${sLista}` },
       { from: 'user', text: '1' },
       { from: 'bot', text: `Perfecto, ${primer}. Nuestro horario es ${hTexto}.\n¿Qué día y hora te acomoda?` },
       { from: 'user', text: 'Jueves a las 11' },
-      { from: 'bot', text: '🔎 Reviso disponibilidad… ¡el jueves 26/06 a las 11:00 está libre! ¿Lo confirmo?' },
-      { from: 'user', text: 'Sí' },
+    ]
+  },
+  accion: () => [
+    { from: 'bot', text: '🔎 Reviso disponibilidad… ¡el jueves 26/06 a las 11:00 está libre! ¿Lo confirmo?' },
+    { from: 'user', text: 'Sí' },
+  ],
+  escalamiento: () => [
+    { from: 'bot', text: '👩‍💼 Para este caso te conecto con nuestra recepción. Un momento…' },
+  ],
+  cierre: ({ template, cf }) => {
+    const primer = rows(cf, 'servicios')[0]?.nombre || 'tu servicio'
+    return [
       {
         from: 'bot',
         text: `✅ ¡Listo, María! Tu cita:\n${primer} · jueves 26/06 11:00\n📍 ${v(template, cf, 'direccion')}\nℹ️ ${v(template, cf, 'instrucciones_asistir')}`,
       },
     ]
-  }
+  },
+  error_recovery: () => [
+    { from: 'user', text: 'el juev a las cmo' },
+    { from: 'bot', text: 'Perdona, no te entendí 🙏 ¿Me confirmas el día y la hora?' },
+  ],
+}
 
-  if (templateKey === 'soporte-pedidos') {
-    const faqs = rows(cf, 'faqs')
-    const faq = faqs[0]
-    return [
-      { from: 'bot', text: `¡Hola! Soy el asistente de ${negocio}. ¿En qué te ayudo con tu pedido?` },
-      { from: 'user', text: faq?.pregunta || '¿Cuánto tarda el envío?' },
-      { from: 'bot', text: faq?.respuesta || '(agrega preguntas frecuentes en el catálogo)' },
-      { from: 'bot', text: `¿Algo más? Recuerda: ${v(template, cf, 'politica_devoluciones')}.` },
-    ]
-  }
+const soportePedidos: Partial<Record<FlowStepKey, StepBuilder>> = {
+  saludo: ({ negocio }) => [
+    { from: 'bot', text: `¡Hola! Soy el asistente de ${negocio}. ¿En qué te ayudo con tu pedido?` },
+  ],
+  clarificacion: ({ cf }) => [
+    { from: 'user', text: rows(cf, 'faqs')[0]?.pregunta || '¿Cuánto tarda el envío?' },
+  ],
+  accion: ({ cf }) => [
+    { from: 'bot', text: rows(cf, 'faqs')[0]?.respuesta || '(agrega preguntas frecuentes en el catálogo)' },
+  ],
+  escalamiento: () => [
+    { from: 'bot', text: '👩‍💼 Te paso con un agente humano para revisar tu caso.' },
+  ],
+  cierre: ({ template, cf }) => [
+    { from: 'bot', text: `¿Algo más? Recuerda: ${v(template, cf, 'politica_devoluciones')}.` },
+  ],
+  error_recovery: () => [
+    { from: 'user', text: '???' },
+    { from: 'bot', text: 'No estoy seguro de haber entendido. ¿Puedes reformular tu pregunta?' },
+  ],
+}
 
-  if (templateKey === 'faq-rrhh') {
-    const pol = rows(cf, 'politicas')[0]
-    return [
-      { from: 'bot', text: `Hola 👋 Soy el asistente de RRHH de ${negocio}. ¿Qué necesitas?` },
-      { from: 'user', text: pol?.tema || 'Vacaciones' },
-      { from: 'bot', text: pol?.contenido || '(agrega políticas en el catálogo)' },
-    ]
-  }
+const faqRrhh: Partial<Record<FlowStepKey, StepBuilder>> = {
+  saludo: ({ negocio }) => [
+    { from: 'bot', text: `Hola 👋 Soy el asistente de RRHH de ${negocio}. ¿Qué necesitas?` },
+  ],
+  clarificacion: ({ cf }) => [{ from: 'user', text: rows(cf, 'politicas')[0]?.tema || 'Vacaciones' }],
+  accion: ({ cf }) => [
+    { from: 'bot', text: rows(cf, 'politicas')[0]?.contenido || '(agrega políticas en el catálogo)' },
+  ],
+  escalamiento: () => [{ from: 'bot', text: '👩‍💼 Te derivo con una persona del equipo de RRHH.' }],
+  cierre: () => [{ from: 'bot', text: '¿Te ayudo con algo más?' }],
+  error_recovery: () => [{ from: 'bot', text: 'No te entendí bien, ¿lo reformulas?' }],
+}
 
-  return [
+const generico: Partial<Record<FlowStepKey, StepBuilder>> = {
+  saludo: ({ negocio }) => [
     { from: 'bot', text: `¡Hola! Bienvenido a ${negocio}. ¿En qué puedo ayudarte?` },
-    { from: 'user', text: '…' },
-    { from: 'bot', text: 'Personaliza este flujo añadiendo variables y catálogos por Cliente Final.' },
-  ]
+  ],
+  clarificacion: () => [{ from: 'user', text: 'Quisiera información…' }],
+  accion: () => [{ from: 'bot', text: 'Con gusto, déjame ayudarte con eso.' }],
+  escalamiento: () => [{ from: 'bot', text: '👩‍💼 Te conecto con una persona del equipo.' }],
+  cierre: () => [{ from: 'bot', text: '¡Gracias por escribir! Que tengas buen día 👋' }],
+  error_recovery: () => [{ from: 'bot', text: 'Perdón, no te entendí. ¿Puedes repetirlo?' }],
+}
+
+const STEP_BUILDERS: Record<string, Partial<Record<FlowStepKey, StepBuilder>>> = {
+  'agendar-cita': agendarCita,
+  'soporte-pedidos': soportePedidos,
+  'faq-rrhh': faqRrhh,
+  generica: generico,
+}
+
+const FALLBACK_FLOW: FlowStepKey[] = ['saludo', 'clarificacion', 'accion', 'cierre']
+
+// Construye la conversación siguiendo el ORDEN del flujo: cada paso aporta sus
+// turnos. Reordenar o quitar pasos cambia el preview.
+export function buildPreview(
+  templateKey: string,
+  cf: ClienteFinal | null,
+  flujo: FlowStepKey[] = FALLBACK_FLOW
+): PreviewTurn[] {
+  const template = getTemplate(templateKey)
+  const builders = STEP_BUILDERS[templateKey] ?? generico
+  const ctx: PreviewCtx = { template, cf, negocio: v(template, cf, 'nombre_negocio') }
+
+  const pasos = flujo.length > 0 ? flujo : FALLBACK_FLOW
+  const turns = pasos.flatMap((step) => {
+    const build = builders[step] ?? generico[step]
+    return build ? build(ctx) : []
+  })
+
+  return turns.length > 0
+    ? turns
+    : [{ from: 'bot', text: `¡Hola! Bienvenido a ${ctx.negocio}.` }]
 }

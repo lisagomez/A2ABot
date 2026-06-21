@@ -11,10 +11,21 @@ const ESTADO_META: Record<Project['estado'], { label: string; badge: string }> =
   bloqueado: { label: 'Bloqueado', badge: 'bg-red-50 text-red-700 border-red-200' },
 }
 
-export function ProjectCard({ project, onDelete }: { project: Project; onDelete: () => void }) {
+export function ProjectCard({
+  project,
+  onOpen,
+  onDelete,
+}: {
+  project: Project
+  onOpen: () => void
+  onDelete: () => void
+}) {
   const topic = getTopic(project.temaKey)
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div
+      onClick={onOpen}
+      className="cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition hover:border-gray-400 hover:shadow-sm"
+    >
       <div className="flex items-start justify-between">
         <div>
           <h4 className="font-medium text-gray-900">{project.nombre}</h4>
@@ -23,7 +34,10 @@ export function ProjectCard({ project, onDelete }: { project: Project; onDelete:
           </p>
         </div>
         <button
-          onClick={onDelete}
+          onClick={(e) => {
+            e.stopPropagation()
+            onDelete()
+          }}
           className="text-xs text-gray-300 hover:text-red-500"
           aria-label="Eliminar proyecto"
         >

@@ -53,6 +53,7 @@ export interface Project {
   workspaceId: string
   nombre: string
   temaKey: string
+  templateKey: string
   riesgo: RiskLevel
   pais: string
   idiomas: string[]
@@ -61,4 +62,54 @@ export interface Project {
   complejidad: Complexity
   estado: 'borrador' | 'bloqueado' | 'pendiente_revision' | 'listo'
   createdAt: string
+}
+
+// ---- Plantilla (Capa 1): molde reutilizable con huecos ----
+
+export interface TemplateVariable {
+  key: string
+  label: string
+  placeholder: string
+  opcional?: boolean
+}
+
+export interface CatalogColumn {
+  key: string
+  label: string
+  tipo: 'text' | 'number'
+  placeholder?: string
+}
+
+export interface CatalogSpec {
+  key: string
+  label: string
+  descripcion: string
+  columnas: CatalogColumn[]
+}
+
+export interface ProjectTemplate {
+  key: string
+  nombre: string
+  descripcion: string
+  variables: TemplateVariable[]
+  catalogos: CatalogSpec[]
+}
+
+/** Fila de un catálogo lleno (clave de columna → valor). */
+export type CatalogRow = Record<string, string>
+
+// ---- Cliente Final (Capa 2): instancia personalizada de la plantilla ----
+
+export interface ClienteFinal {
+  id: string
+  projectId: string
+  nombre: string
+  variables: Record<string, string>
+  catalogos: Record<string, CatalogRow[]>
+  createdAt: string
+}
+
+export interface PreviewTurn {
+  from: 'bot' | 'user'
+  text: string
 }

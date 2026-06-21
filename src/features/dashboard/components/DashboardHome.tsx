@@ -4,18 +4,32 @@ import { useState } from 'react'
 import { useDashboardStore } from '../store/useDashboardStore'
 import { DiscoveryWizard } from './DiscoveryWizard'
 import { ProjectCard } from './ProjectCard'
+import { ProjectDetail } from './ProjectDetail'
 
 export function DashboardHome({ userId, nombre }: { userId: string; nombre: string }) {
   const store = useDashboardStore(userId)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [openProjectId, setOpenProjectId] = useState<string | null>(null)
   const [creatingWorkspace, setCreatingWorkspace] = useState(false)
   const [wsName, setWsName] = useState('')
   const [wizardOpen, setWizardOpen] = useState(false)
 
   const selected = store.workspaces.find((w) => w.id === selectedId) ?? null
+  const openProject = store.projects.find((p) => p.id === openProjectId) ?? null
 
   if (!store.hydrated) {
     return <p className="text-sm text-gray-400">Cargando tu espacio…</p>
+  }
+
+  // ---- Vista de detalle de un proyecto (plantilla + Clientes Finales) ----
+  if (openProject) {
+    return (
+      <ProjectDetail
+        project={openProject}
+        store={store}
+        onBack={() => setOpenProjectId(null)}
+      />
+    )
   }
 
   function submitWorkspace() {
@@ -70,7 +84,12 @@ export function DashboardHome({ userId, nombre }: { userId: string; nombre: stri
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} onDelete={() => store.deleteProject(p.id)} />
+              <ProjectCard
+                key={p.id}
+                project={p}
+                onOpen={() => setOpenProjectId(p.id)}
+                onDelete={() => store.deleteProject(p.id)}
+              />
             ))}
           </div>
         )}

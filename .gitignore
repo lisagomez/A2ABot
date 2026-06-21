@@ -67,3 +67,6 @@ supabase/.temp
 
 # TypeScript build info
 *.tsbuildinfo
+
+# Next.js genera este archivo en cada comando (dev/build alternan la ruta)
+next-env.d.ts

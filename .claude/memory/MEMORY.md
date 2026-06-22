@@ -7,7 +7,7 @@
 (vacio)
 
 ## project/ — Proyectos y decisiones activas
-(vacio)
+- [dashboard-flow-advisor.md](project/dashboard-flow-advisor.md) — Dashboard del dev es prototipo in-memory (Zustand, sin Supabase); Flow Advisor usa reglas deterministas (futuro: LLM). Rama `feat/flow-advisor`.
 
 ## feedback/ — Correcciones y preferencias
 (vacio)

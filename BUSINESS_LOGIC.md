@@ -4,6 +4,43 @@
 
 ---
 
+## Estado de Implementación (2026-06-22)
+
+> ⚠️ **Importante:** todo lo que sigue a partir de la Sección 0 describe la **visión de
+> diseño objetivo** de a2abot, NO el estado actual del código. Esta sección es la única que
+> refleja lo que existe hoy. El proyecto está en **Fase 0**: la mayor parte de la
+> arquitectura (agentes A2A, smart contracts, generación CLI, multi-canal, billing) aún no
+> está construida.
+
+### Verificación de integraciones
+
+| Integración | Estado real | Evidencia |
+|-------------|-------------|-----------|
+| Auth Supabase | ✅ Implementada | `src/actions/auth.ts`, `src/lib/supabase/`, tabla `profiles` con RLS |
+| Persistencia del dashboard | ❌ In-memory | `src/features/dashboard/store/useDashboardStore.ts` → Zustand + localStorage, sin Supabase |
+| Tablas de negocio (workspaces, proyectos, clientes, agent_runs, contratos…) | ❌ No existen | Solo `supabase/migrations/0001_profiles.sql`; ninguna de las ~12 tablas de la Sección 7 está creada |
+| OpenRouter / LLM | ⚠️ Token configurado, sin uso | `OPENROUTER_API_KEY` presente en `.env.local`, 0 referencias en el código |
+| Telegram bot | ⚠️ Token configurado, sin uso | `TELEGRAM_BOT_TOKEN` presente en `.env.local`, 0 referencias en el código |
+| 7 agentes A2A / smart contracts / CLI generator | ❌ No implementados | No existen en `src/`; no hay rutas `src/app/api` |
+| Flow Advisor | ✅ Implementado con **reglas deterministas** (no LLM) | `src/features/dashboard/lib/flowAdvisor.ts` |
+
+### Lo que SÍ existe hoy (Fase 0)
+- Autenticación completa de Supabase (login, signup, reset, callback) + tabla `profiles`.
+- Dashboard del Cliente Desarrollador como **prototipo 100% in-memory** (Zustand): workspaces,
+  proyectos, clientes finales, discovery wizard, flow builder (drag & drop), flow advisor por
+  reglas, conversation preview y editor de Cliente Final. Los datos se pierden al recargar.
+
+### Roadmap de fases
+- **Fase 0 (actual):** auth + dashboard prototipo in-memory.
+- **Fase 1 (próxima):** persistir a Supabase (`workspaces`, `proyectos`, `clientes_finales` + RLS).
+- **Fase 2:** conectar LLM real vía OpenRouter (Discovery / Flow Advisor razonando, no reglas fijas).
+- **Fase 3:** integración Telegram + canales + generación de handlers (CLI generator).
+
+> El detalle vivo de este estado se mantiene en `.claude/memory/` (ver
+> `reference/integraciones-pendientes.md` y `project/dashboard-flow-advisor.md`).
+
+---
+
 ## 0. Actores y Canales de Comunicación
 
 > Tres actores distintos. Canales no intercambiables. La arquitectura multi-canal es nativa desde Fase 1.

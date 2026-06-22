@@ -1,171 +1,108 @@
-# SaaS Factory V4
+# a2abot
 
-Template production-ready para crear aplicaciones SaaS con desarrollo asistido por IA. Filosofia Agent-First: el usuario dice que quiere, el agente construye todo.
+Plataforma **A2A (Agent-to-Agent)** para construir bots conversacionales de Telegram (y otros
+canales) sin escribir el bot desde cero. La idea: un desarrollador describe lo que necesita y una
+cadena de agentes se entrevistan entre sí hasta producir un bot configurado y verificado, con un
+humano supervisando el pipeline (HITL) sin bloquearlo.
 
-## Que incluye
+> La **visión completa** del producto (3 actores, 7 agentes, smart contracts, modelo de datos,
+> pricing, fases) está en [`BUSINESS_LOGIC.md`](./BUSINESS_LOGIC.md). Ese documento describe el
+> diseño objetivo; este README describe lo que existe **hoy**.
 
-- Next.js 16 (App Router) + TypeScript
-- Supabase (Database + Auth + RLS)
-- Tailwind CSS + shadcn/ui
-- 19 Skills de Claude Code (V4 Skills 2.0)
-- Playwright CLI para QA automatizado
-- AI Templates (Vercel AI SDK v5 + OpenRouter)
-- 5 Design Systems listos para usar
-- Arquitectura Feature-First optimizada para IA
-- Auto-Blindaje: el sistema aprende de cada error
+---
 
-## Quick Start
+## Estado actual — Fase 0
 
-### 1. Instalar
+El proyecto está en una fase temprana. Lo construido:
 
-```bash
-npm install
-```
+- **Autenticación (Supabase):** login, signup, recuperación de contraseña, callback OAuth y tabla
+  `profiles` con RLS.
+- **Dashboard del Cliente Desarrollador — prototipo in-memory (Zustand):**
+  - Workspaces y proyectos (CRUD en memoria).
+  - **Discovery Wizard**: entrevista de 6 pasos (tema → proyecto → alcance → canales → flujo → resumen)
+    que deriva complejidad y estado del proyecto.
+  - **Flow Builder**: edición del flujo conversacional con drag & drop.
+  - **Flow Advisor**: detecta huecos en el flujo y sugiere arreglos (hoy con **reglas deterministas**,
+    no LLM).
+  - **Conversation Preview**: previsualización en vivo de la conversación según el flujo.
+  - **Editor de Cliente Final**: rellena variables y catálogos de la plantilla.
 
-### 2. Variables de Entorno
+> ⚠️ El dashboard es un **prototipo 100% en memoria** (localStorage). Los datos se pierden al
+> recargar y **no se persisten en Supabase** todavía. Ver el roadmap abajo.
 
-```bash
-cp .env.example .env.local
-# Editar con credenciales de Supabase
-```
+---
 
-### 3. MCPs (Opcional)
-
-```bash
-cp .claude/example.mcp.json .mcp.json
-# Editar con project ref de Supabase
-```
-
-### 4. Desarrollar
-
-```bash
-npm run dev
-# Auto-detecta puerto disponible (3000-3006)
-```
-
-## Tech Stack
+## Tech Stack (real)
 
 ```yaml
-Runtime: Node.js + TypeScript
-Framework: Next.js 16 (App Router)
-Database: PostgreSQL/Supabase
-Styling: Tailwind CSS 3.4
-Components: shadcn/ui
-State: Zustand
-Validation: Zod
-AI Engine: Vercel AI SDK v5 + OpenRouter
-Testing: Playwright CLI + MCP
-Deploy: Vercel
-```
-
-## Arquitectura Feature-First
-
-```
-src/
-├── app/                      # Next.js App Router
-│   ├── (auth)/              # Rutas auth
-│   ├── (main)/              # Rutas principales
-│   └── layout.tsx
-│
-├── features/                 # Organizadas por funcionalidad
-│   └── [feature]/
-│       ├── components/
-│       ├── hooks/
-│       ├── services/
-│       ├── types/
-│       └── store/
-│
-└── shared/                   # Codigo reutilizable
-    ├── components/
-    ├── hooks/
-    ├── lib/
-    └── types/
-```
-
-## Skills (19 total)
-
-### Para el usuario
-
-| Skill | Que hace |
-|-------|----------|
-| `/new-app` | Entrevista de negocio → BUSINESS_LOGIC.md |
-| `/landing` | Landing page de alta conversion |
-| `/add-login` | Auth completo (Email + Google OAuth + profiles + RLS) |
-| `/bucle-agentico` | Implementar features complejas por fases |
-| `/sprint` | Tareas rapidas sin planificacion |
-| `/prp` | Planificar features complejas antes de implementar |
-| `/ai [template]` | Agregar IA: chat, RAG, vision, tools |
-| `/qa` | QA automatizado con Playwright CLI |
-| `/primer` | Inicializar contexto del proyecto |
-| `/update-sf` | Actualizar a ultima version |
-| `/eject-sf` | Remover SaaS Factory (destructivo) |
-| `/skill-creator` | Crear nuevos skills |
-
-### Automaticos (Claude los activa segun la tarea)
-
-backend, frontend, supabase-admin, codebase-analyst, vercel-deployer, documentacion, calidad
-
-## AI Templates
-
-Bloques LEGO para construir features de IA con Vercel AI SDK v5 + OpenRouter:
-
-| Template | Que hace |
-|----------|----------|
-| setup-base | Configuracion inicial |
-| chat | Chat streaming con useChat |
-| web-search | Busqueda con :online |
-| historial | Persistencia en Supabase |
-| vision | Analisis de imagenes |
-| tools | Funciones/herramientas |
-| rag | pgvector + embeddings |
-| single-call | generateText() puntual |
-| structured-outputs | generateObject() con Zod |
-| generative-ui | LLM decide que componente renderizar |
-
-## Design Systems
-
-5 sistemas visuales listos en `.claude/design-systems/`:
-
-- **Liquid Glass** - iOS-like, transparencias
-- **Gradient Mesh** - Degradados fluidos
-- **Neumorphism** - Soft UI, sombras suaves
-- **Bento Grid** - Grids asimetricos
-- **Neobrutalism** - Bold, bordes duros
-
-## Comandos
-
-```bash
-npm run dev          # Desarrollo (auto-port 3000-3006)
-npm run build        # Build produccion
-npm run typecheck    # TypeScript check
-npm run lint         # ESLint
-```
-
-## Deploy
-
-```bash
-# Vercel (recomendado)
-npm install -g vercel
-vercel
-```
-
-Variables en Vercel Dashboard:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-
-## Estructura .claude/
-
-```
-.claude/
-├── skills/              # 19 Skills (V4 Skills 2.0)
-├── PRPs/                # Product Requirements Proposals
-│   │   └── references/  # AI Templates (11 bloques)
-├── design-systems/      # 5 sistemas de diseno
-├── hooks/               # Scripts en eventos
-└── example.mcp.json     # Config de MCPs
+Framework:  Next.js 16 (App Router, Turbopack)
+UI:         React 19 + TypeScript
+Styling:    Tailwind CSS 3.4
+Backend:    Supabase (Auth + PostgreSQL + RLS)
+Estado:     Zustand
 ```
 
 ---
 
-**SaaS Factory V4** | Agent-First. Todo es un Skill.
-# A2ABot
+## Quick Start
+
+### 1. Instalar
+```bash
+npm install
+```
+
+### 2. Variables de entorno
+```bash
+cp .env.local.example .env.local
+# Editar con credenciales de Supabase (y, para fases futuras, OpenRouter / Telegram)
+```
+
+### 3. Desarrollar
+```bash
+npm run dev   # Next.js + Turbopack
+```
+
+### Comandos
+```bash
+npm run dev     # Desarrollo
+npm run build   # Build de producción
+npm run lint    # ESLint
+```
+
+---
+
+## Arquitectura (Feature-First)
+
+```
+src/
+├── app/
+│   ├── (auth)/        # login, signup, forgot/update password, callback
+│   ├── (main)/        # dashboard
+│   └── layout.tsx
+├── features/
+│   └── dashboard/     # components, store (Zustand), lib, data, types
+└── lib/supabase/      # clients (client.ts, server.ts)
+```
+
+---
+
+## Integraciones pendientes / Roadmap
+
+Algunas integraciones están **configuradas pero aún sin uso en el código**:
+
+| Integración | Estado |
+|-------------|--------|
+| Persistencia del dashboard en Supabase | ❌ Pendiente (hoy in-memory) |
+| `OPENROUTER_API_KEY` (LLM) | ⚠️ Token en `.env.local`, sin uso |
+| `TELEGRAM_BOT_TOKEN` | ⚠️ Token en `.env.local`, sin uso |
+| Agentes A2A / smart contracts / CLI generator | ❌ No implementados |
+
+Roadmap por fases:
+
+- **Fase 0 (actual):** auth + dashboard prototipo in-memory.
+- **Fase 1:** persistir proyectos/flujos en Supabase (+ RLS).
+- **Fase 2:** conectar LLM real vía OpenRouter (Discovery / Flow Advisor).
+- **Fase 3:** integración Telegram + canales + generación de handlers.
+
+Detalle completo en la sección **"Estado de Implementación"** de
+[`BUSINESS_LOGIC.md`](./BUSINESS_LOGIC.md).

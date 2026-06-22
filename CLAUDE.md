@@ -6,6 +6,41 @@
 
 ---
 
+## Proyecto: a2abot (estado real)
+
+> Esta sección es específica de a2abot y describe el estado REAL del código. El resto de este
+> archivo es la maquinaria genérica de SaaS Factory (skills, golden path, etc.).
+
+**Qué es a2abot:** plataforma A2A (Agent-to-Agent) que convierte la construcción de bots de
+Telegram (y otros canales) en una cadena de agentes que se entrevistan entre sí hasta producir
+un bot verificado, con un humano supervisando (HITL) sin bloquear el pipeline.
+
+**3 actores (Sección 0 de `BUSINESS_LOGIC.md`):**
+- **a2abot** — opera la plataforma y da soporte (HITL 2 cross-tenant).
+- **Cliente Desarrollador** — dev/agencia que construye bots (Telegram + dashboard web HITL 1).
+- **Cliente Final** — empresa que compra el bot; lo usa multi-canal (Telegram/WhatsApp/Slack/Discord/web).
+
+**Diseño objetivo, AÚN NO implementado:** 7 agentes A2A (Discovery, Token Optimizer, Designer,
+CLI Generator, QA, Learning, Triage), smart contracts (Zod), generación CLI multi-canal, billing,
+y ~12 tablas de Supabase. Todo eso vive como visión en `BUSINESS_LOGIC.md`, no en `src/`.
+
+**⚠️ Avisos para no asumir de más (verificado 2026-06-22):**
+- El **dashboard es un prototipo 100% in-memory** (Zustand + localStorage en
+  `src/features/dashboard/store/useDashboardStore.ts`). NO persiste a Supabase. Los datos se
+  pierden al recargar.
+- En Supabase **solo existe la tabla `profiles`** (migración `0001_profiles.sql`). Ninguna tabla
+  de negocio existe todavía.
+- `OPENROUTER_API_KEY` y `TELEGRAM_BOT_TOKEN` están en `.env.local` pero **ningún código los usa**.
+- El **Flow Advisor** (`src/features/dashboard/lib/flowAdvisor.ts`) funciona con **reglas
+  deterministas**, no con LLM.
+- No hay rutas `src/app/api`.
+
+**Antes de tocar el proyecto, lee el contexto vivo:** sección "Estado de Implementación" de
+`BUSINESS_LOGIC.md` y la memoria persistente en `.claude/memory/`
+(`reference/integraciones-pendientes.md`, `project/dashboard-flow-advisor.md`).
+
+---
+
 ## Filosofia: Agent-First
 
 El usuario habla en lenguaje natural. Tu traduces a codigo.

@@ -13,4 +13,4 @@
 (vacio)
 
 ## reference/ — Donde encontrar cosas
-(vacio)
+- [integraciones-pendientes.md](reference/integraciones-pendientes.md) — Verificación 2026-06-22: proyecto en Fase 0. Solo existe tabla `profiles`; dashboard 100% in-memory; `OPENROUTER_API_KEY` y `TELEGRAM_BOT_TOKEN` configurados pero sin uso. Roadmap de fases.

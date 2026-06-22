@@ -7,6 +7,7 @@ import { buildPreview, getTemplate } from '../data/templates'
 import { COMPLEXITY_META } from '../lib/complexity'
 import { ClienteFinalEditor } from './ClienteFinalEditor'
 import { ConversationPreview } from './ConversationPreview'
+import { FlowAdvisor } from './FlowAdvisor'
 import { FlowBuilder } from './FlowBuilder'
 
 interface StoreSlice {
@@ -90,7 +91,12 @@ export function ProjectDetail({
             <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
               Flujo de comunicación
             </p>
-            <div className="mt-2">
+            <div className="mt-2 space-y-3">
+              <FlowAdvisor
+                templateKey={template.key}
+                flujo={project.flujo}
+                onApply={(flujo) => store.updateProject(project.id, { flujo })}
+              />
               <FlowBuilder
                 value={project.flujo}
                 onChange={(flujo: FlowStepKey[]) => store.updateProject(project.id, { flujo })}
